@@ -1,10 +1,14 @@
-# fast text. using: very simple model;n-gram to captrue location information;h-softmax to speed up training/inference
-# for the n-gram you can use data_util to generate. see method process_one_sentence_to_get_ui_bi_tri_gram under aa1_data_util/data_util_zhihu.py
-print("started...")
 import tensorflow as tf
 import numpy as np
 
-# modi
+
+'''
+fast text. using: very simple model;n-gram to captrue location information;h-softmax to speed up training/inference
+for the n-gram you can use data_util to generate. see method process_one_sentence_to_get_ui_bi_tri_gram under aa1_data_util/data_util_zhihu.py
+'''
+print("started...")
+
+
 class fastTextB:
     def __init__(self, label_size, learning_rate, batch_size, decay_steps, decay_rate,num_sampled,sentence_len,vocab_size,embed_size,is_training):
         """init all hyperparameter here"""
@@ -63,14 +67,14 @@ class fastTextB:
         # tf.nce_loss automatically draws a new sample of the negative labels each
         # time we evaluate the loss.
         if self.is_training: #training
-            labels=tf.reshape(self.labels,[-1])               #[batch_size,1]------>[batch_size,]
-            labels=tf.expand_dims(labels,1)                   #[batch_size,]----->[batch_size,1]
-            loss = tf.reduce_mean( #inputs: A `Tensor` of shape `[batch_size, dim]`.  The forward activations of the input network.
-                tf.nn.nce_loss(weights=tf.transpose(self.W),  #[embed_size, label_size]--->[label_size,embed_size]. nce_weights:A `Tensor` of shape `[num_classes, dim].O.K.
-                               biases=self.b,                 #[label_size]. nce_biases:A `Tensor` of shape `[num_classes]`.
-                               labels=labels,                 #[batch_size,1]. train_labels, # A `Tensor` of type `int64` and shape `[batch_size,num_true]`. The target classes.
-                               inputs=self.sentence_embeddings,# [None,self.embed_size] #A `Tensor` of shape `[batch_size, dim]`.  The forward activations of the input network.
-                               num_sampled=self.num_sampled,  #scalar. 100
+            labels = tf.reshape(self.labels, [-1])                  # [batch_size,1]------>[batch_size,]
+            labels = tf.expand_dims(labels, 1)                      # [batch_size,]----->[batch_size,1]
+            loss = tf.reduce_mean(                                  # inputs: A `Tensor` of shape `[batch_size, dim]`.  The forward activations of the input network.
+                tf.nn.nce_loss(weights=tf.transpose(self.W),        # [embed_size, label_size]--->[label_size,embed_size]. nce_weights:A `Tensor` of shape `[num_classes, dim].O.K.
+                               biases=self.b,                       # [label_size]. nce_biases:A `Tensor` of shape `[num_classes]`.
+                               labels=labels,                       # [batch_size,1]. train_labels, # A `Tensor` of type `int64` and shape `[batch_size,num_true]`. The target classes.
+                               inputs=self.sentence_embeddings,     # [None,self.embed_size] #A `Tensor` of shape `[batch_size, dim]`.  The forward activations of the input network.
+                               num_sampled=self.num_sampled,        # scalar. 100
                                num_classes=self.label_size,partition_strategy="div"))  #scalar. 1999
         else:#eval/inference
             #logits = tf.matmul(self.sentence_embeddings, tf.transpose(self.W)) #matmul([None,self.embed_size])--->
