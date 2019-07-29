@@ -16,11 +16,11 @@ class fastTextB:
         self.label_size = label_size
         self.batch_size = batch_size
         self.num_sampled = num_sampled
-        self.sentence_len=sentence_len
-        self.vocab_size=vocab_size
-        self.embed_size=embed_size
-        self.is_training=is_training
-        self.learning_rate=learning_rate
+        self.sentence_len = sentence_len
+        self.vocab_size = vocab_size
+        self.embed_size = embed_size
+        self.is_training = is_training
+        self.learning_rate = learning_rate
 
         # add placeholder (X,label)
         self.sentence = tf.placeholder(tf.int32, [None, self.sentence_len], name="sentence")  # X
@@ -33,7 +33,7 @@ class fastTextB:
 
         self.epoch_step = tf.Variable(0, trainable=False, name="Epoch_Step")
         self.instantiate_weights()
-        self.logits = self.inference() #[None, self.label_size]
+        self.logits = self.inference()  # [None, self.label_size]
         if not is_training:
             return
         self.loss_val = self.loss()
@@ -66,21 +66,51 @@ class fastTextB:
         # Compute the average NCE loss for the batch.
         # tf.nce_loss automatically draws a new sample of the negative labels each
         # time we evaluate the loss.
-        if self.is_training: #training
+        if self.is_training:    # training
             labels = tf.reshape(self.labels, [-1])                  # [batch_size,1]------>[batch_size,]
             labels = tf.expand_dims(labels, 1)                      # [batch_size,]----->[batch_size,1]
             loss = tf.reduce_mean(                                  # inputs: A `Tensor` of shape `[batch_size, dim]`.  The forward activations of the input network.
-                tf.nn.nce_loss(weights=tf.transpose(self.W),        # [embed_size, label_size]--->[label_size,embed_size]. nce_weights:A `Tensor` of shape `[num_classes, dim].O.K.
-                               biases=self.b,                       # [label_size]. nce_biases:A `Tensor` of shape `[num_classes]`.
-                               labels=labels,                       # [batch_size,1]. train_labels, # A `Tensor` of type `int64` and shape `[batch_size,num_true]`. The target classes.
-                               inputs=self.sentence_embeddings,     # [None,self.embed_size] #A `Tensor` of shape `[batch_size, dim]`.  The forward activations of the input network.
-                               num_sampled=self.num_sampled,        # scalar. 100
-                               num_classes=self.label_size,partition_strategy="div"))  #scalar. 1999
-        else:#eval/inference
+                tf.nn.nce_loss(
+                    # 参考
+                    # https://blog.csdn.net/u012436149/article/details/52848013
+                    # https://www.cnblogs.com/xiaojieshisilang/p/9284634.html
+
+                    # [embed_size, label_size]--->[label_size,embed_size].
+                    # nce_weights:A `Tensor` of shape `[num_classes, dim].O.K.
+                    # num_classes, dim 是词的维度
+                    weights=tf.transpose(self.W),
+
+                    # [label_size]. nce_biases:A `Tensor` of shape `[num_classes]`.
+                    # num_classes 是词的个数
+                    biases=self.b,
+
+                    # [batch_size,1]. train_labels,
+                    # A `Tensor` of type `int64` and shape `[batch_size,num_true]`. The target classes.
+                    # [batch_size, num_true] 这里，我们的num_true设置为1，就是一个输入对应一个输出
+                    labels=labels,
+
+                    # [batch_size,self.embed_size]
+                    # A `Tensor` of shape `[batch_size, dim]`.  The forward activations of the input network.
+                    inputs=self.sentence_embeddings,
+
+                    # scalar. 100
+                    # 每个batch要取的负样本的个数
+                    num_sampled=self.num_sampled,
+
+                    # scalar. 1999
+                    # 类别的个数，（这里就是word的个数，不包含重复的）
+                    num_classes=self.label_size, partition_strategy="div"))
+        else:   # eval/inference
             #logits = tf.matmul(self.sentence_embeddings, tf.transpose(self.W)) #matmul([None,self.embed_size])--->
             #logits = tf.nn.bias_add(logits, self.b)
-            labels_one_hot = tf.one_hot(self.labels, self.label_size) #[batch_size]---->[batch_size,label_size]
-            #sigmoid_cross_entropy_with_logits:Computes sigmoid cross entropy given `logits`.Measures the probability error in discrete classification tasks in which each class is independent and not mutually exclusive.  For instance, one could perform multilabel classification where a picture can contain both an elephant and a dog at the same time.
+            # [batch_size]---->[batch_size,label_size]
+            labels_one_hot = tf.one_hot(self.labels, self.label_size)
+            # sigmoid_cross_entropy_with_logits:
+            # Computes sigmoid cross entropy given `logits`.
+            # Measures the probability error in discrete classification tasks
+            # in which each class is independent and not mutually exclusive.
+            # For instance, one could perform multilabel classification where
+            # a picture can contain both an elephant and a dog at the same time.
             loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels_one_hot,logits=self.logits) #labels:[batch_size,label_size];logits:[batch, label_size]
             print("loss0:", loss) #shape=(?, 1999)
             loss = tf.reduce_sum(loss, axis=1)

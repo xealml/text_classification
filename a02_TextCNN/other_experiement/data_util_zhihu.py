@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 import codecs
 import numpy as np
-#load data of zhihu
+# load data of zhihu
 import word2vec
 import os
 import pickle
 PAD_ID = 0
 from tflearn.data_utils import pad_sequences
-_GO="_GO"
-_END="_END"
-_PAD="_PAD"
+_GO = "_GO"
+_END = "_END"
+_PAD = "_PAD"
 
-#use pretrained word embedding to get word vocabulary and labels, and its relationship with index
+
+# use pretrained word embedding to get word vocabulary and labels, and its relationship with index
 def create_voabulary(simple=None,word2vec_model_path='zhihu-word2vec-title-desc.bin-100',name_scope=''):
     cache_path ='cache_vocabulary_label_pik/'+ name_scope + "_word_voabulary.pik"
     print("cache_path:",cache_path,"file_exists:",os.path.exists(cache_path))
@@ -30,15 +31,15 @@ def create_voabulary(simple=None,word2vec_model_path='zhihu-word2vec-title-desc.
         vocabulary_index2word[0]='PAD_ID'
         special_index=0
         if 'biLstmTextRelation' in name_scope:
-            vocabulary_word2index['EOS']=1 # a special token for biLstTextRelation model. which is used between two sentences.
+            vocabulary_word2index['EOS'] = 1  # a special token for biLstTextRelation model. which is used between two sentences.
             vocabulary_index2word[1]='EOS'
             special_index=1
         for i,vocab in enumerate(model.vocab):
             vocabulary_word2index[vocab]=i+1+special_index
             vocabulary_index2word[i+1+special_index]=vocab
 
-        #save to file system if vocabulary of words is not exists.
-        if not os.path.exists(cache_path): #如果不存在写到缓存文件中
+        # save to file system if vocabulary of words is not exists.
+        if not os.path.exists(cache_path):  # 如果不存在写到缓存文件中
             with open(cache_path, 'a') as data_f:
                 pickle.dump((vocabulary_word2index,vocabulary_index2word), data_f)
     return vocabulary_word2index,vocabulary_index2word

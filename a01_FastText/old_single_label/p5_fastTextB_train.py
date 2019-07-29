@@ -38,7 +38,7 @@ def main(_):
     # else:
     if 1 == 1:
         trainX, trainY, testX, testY = None, None, None, None
-        vocabulary_word2index, vocabulary_index2word = create_voabulary()
+        [vocabulary_index2word, vocabulary_word2index] = create_voabulary()
         vocab_size = len(vocabulary_word2index)
         vocabulary_word2index_label,_ = create_voabulary_label()
         train, test, _ = load_data(vocabulary_word2index, vocabulary_word2index_label,data_type='train')
@@ -87,7 +87,7 @@ def main(_):
         batch_size = FLAGS.batch_size
         for epoch in range(curr_epoch, FLAGS.num_epochs):   # range(start,stop,step_size), 训练若干个epoch
             loss, acc, counter = 0.0, 0.0, 0    # counter用来标志走了多少个batch
-            for start, end in zip(range(0, number_of_training_data, batch_size), range(batch_size, number_of_training_data, batch_size)):   # [left, right] <- 两个标识位标志 batch, 写法可以
+            for start, end in zip(range(0, number_of_training_data, batch_size), range(batch_size, number_of_training_data, batch_size)):   # [left, right] <- 这个写法有问题，最后一个batch如果不够一整个，加载不完整。
                 if epoch == 0 and counter == 0:     # 第一个epoch 打印基础信息
                     print("trainX[start:end]:", trainX[start:end])
                     print("trainY[start:end]:", trainY[start:end])
@@ -131,7 +131,7 @@ def assign_pretrained_word_embedding(sess, vocabulary_index2word, vocab_size, fa
     word_embedding_2dlist = [[]] * vocab_size  # create an empty word_embedding list.
     word_embedding_2dlist[0] = np.zeros(FLAGS.embed_size)  # assign empty for first word:'PAD'
     bound = np.sqrt(6.0) / np.sqrt(vocab_size)  # bound for random variables.
-    count_exist = 0;
+    count_exist = 0
     count_not_exist = 0
     for i in range(1, vocab_size):  # loop each word
         word = vocabulary_index2word[i]  # get a word
@@ -148,7 +148,7 @@ def assign_pretrained_word_embedding(sess, vocabulary_index2word, vocab_size, fa
             count_not_exist = count_not_exist + 1  # init a random value for the word.
     word_embedding_final = np.array(word_embedding_2dlist)  # covert to 2d array.
     word_embedding = tf.constant(word_embedding_final, dtype=tf.float32)  # convert to tensor
-    t_assign_embedding = tf.assign(fast_text.Embedding, word_embedding)  # assign this value to our embedding variables of our model.
+    t_assign_embedding = tf.assign(fast_text.Embedding, word_embedding)   # assign this value to our embedding variables of our model.
     sess.run(t_assign_embedding)
     print("word. exists embedding:", count_exist, " ;word not exist embedding:", count_not_exist)
     print("using pre-trained word emebedding.ended...")
