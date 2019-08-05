@@ -271,3 +271,8 @@ def proces_label_to_algin(ys_list,require_size=5):
     return ys_list_result
 if __name__ == "__main__":
     tf.app.run()
+
+
+import pandas as pd
+
+pd.read_csv()

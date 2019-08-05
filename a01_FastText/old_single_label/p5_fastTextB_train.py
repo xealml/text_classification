@@ -47,7 +47,7 @@ def main(_):
         print("testX.shape:", np.array(testX).shape)  # 2500个list.每个list代表一句话
         print("testY.shape:", np.array(testY).shape)  # 2500个label
         print("testX[0]:", testX[0])  # [17, 25, 10, 406, 26, 14, 56, 61, 62, 323, 4]
-        print("testX[1]:", testX[1]);
+        print("testX[1]:", testX[1])
         print("testY[0]:", testY[0])  # 0 ;print("testY[1]:",testY[1]) #0
 
         # 2.Data preprocessing
